@@ -6,23 +6,48 @@ import 'dart:ui' as ui;
 import 'package:flutter/material.dart';
 import 'package:flutter_dial/dial_painter.dart';
 
+enum DialRotateType {
+  ticker,
+  smooth,
+}
+
 class DialPage extends StatefulWidget {
-  const DialPage({Key? key}) : super(key: key);
+  const DialPage({Key? key, this.rotateType = DialRotateType.ticker})
+      : super(key: key);
+
+  final DialRotateType? rotateType;
 
   @override
   State<DialPage> createState() => _DialPageState();
 }
 
-class _DialPageState extends State<DialPage> {
+class _DialPageState extends State<DialPage> with SingleTickerProviderStateMixin {
 
+  AnimationController? _secondAnimationController;
+  Animation<double>? _secondAnimation;
 
   @override
   void initState() {
     super.initState();
 
-    Timer.periodic(const Duration(seconds: 1), (timer) {
-      setState(() {});
-    });
+    if (widget.rotateType == DialRotateType.smooth) {
+      _secondAnimationController =
+          AnimationController(vsync: this, duration: Duration(seconds: 60));
+      double begin = 2 * pi / 60 * (DateTime.now().second - 15);
+      double end = begin + 2 * pi;
+      _secondAnimation =
+          Tween(begin: begin, end: end).animate(_secondAnimationController!);
+      _secondAnimationController?.repeat();
+    } else if (widget.rotateType == DialRotateType.ticker) {
+      Timer.periodic(const Duration(seconds: 1), (timer) {
+        setState(() {});
+      });
+    }
+  }
+  @override
+  void dispose() {
+    _secondAnimationController?.dispose();
+    super.dispose();
   }
 
   @override
@@ -32,7 +57,18 @@ class _DialPageState extends State<DialPage> {
     return Container(
       color: const Color.fromARGB(255, 35, 36, 38),
       child: Center(
-        child: CustomPaint( // 使用CustomPaint
+        child: widget.rotateType == DialRotateType.smooth
+            ? AnimatedBuilder(
+          animation: _secondAnimationController!,
+          builder: (context, widget) {
+            return CustomPaint(
+              // 使用CustomPaint
+              size: Size(width, width),
+              painter: DialPainter(secondAngle: _secondAnimation?.value),
+            );
+          },
+        )
+            : CustomPaint(
           size: Size(width, width),
           painter: DialPainter(),
         ),

@@ -7,11 +7,15 @@ import 'dart:ui' as ui;
 
 class DialPainter extends CustomPainter{
 
+  final double? secondAngle;
+
   late double width;
   late double height;
   late double radius;
   late final Paint _paint = _initPaint();
   late double unit ;
+
+  DialPainter({this.secondAngle});
 
   Paint _initPaint() {
     return Paint()
@@ -78,7 +82,11 @@ class DialPainter extends CustomPainter{
 
     canvas.save();
     canvas.translate(width/2, height/2);
-    canvas.rotate(2*pi/60 * (date.second - 15));
+    if (secondAngle != null) {
+      canvas.rotate(secondAngle!);
+    } else {
+      canvas.rotate(2 * pi / 60 * (date.second - 15));
+    }
 
     /// 绘制阴影
     canvas.drawShadow(secondsPath, const Color(0xFFcc0000), 0.17 * unit, true);
